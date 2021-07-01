@@ -16,7 +16,7 @@ const Mutation = new GraphQLObjectType({
         deleteUser: DELETE_USER,
         updatePassword: UPDATE_PASSWORD
     }//properties of the object
-})
+});
 
 
 export const schema = new GraphQLSchema({

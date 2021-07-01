@@ -1,4 +1,5 @@
 import {UserType} from "../TypeDefs/User";
+import {ResponseType} from "../TypeDefs/Response";
 import {GraphQLID, GraphQLString} from "graphql";
 import { Users } from './../../Entities/Users'
 
@@ -16,7 +17,7 @@ export const CREATE_USER = {
 };
 
 export const UPDATE_PASSWORD = {
-    type: UserType,
+    type: ResponseType,
     args: {
         username: { type: GraphQLString },
         oldPassword: { type: GraphQLString },
@@ -25,6 +26,9 @@ export const UPDATE_PASSWORD = {
     async resolve(parent: any, args: any) {
         const { username, oldPassword, newPassword } = args;
         const user = await Users.findOne({username: username});
+        if(!user) {
+            throw new Error('User was not found')
+        }
         const userPassword = user?.password;
 
         if(oldPassword === userPassword) {
@@ -32,21 +36,34 @@ export const UPDATE_PASSWORD = {
                 {username: username},
                 {password: newPassword}
                 );
+            return {succesful: true, message: 'Password succesfully updated'}
         } else {
-            throw new Error("PASSWORDS DO NOT MATCH")
+            throw new Error('Passwords do not match');
         }
-        return user;
     }
-}
+};
 
 export const DELETE_USER = {
-    type: UserType,
+    type: ResponseType,
     args: {
         id: { type: GraphQLID }
     },
     async resolve(parent: any, args: any) {
         const { id } = args;
-        await Users.delete({id});
-        return args;
+        const user = await Users.findOneOrFail(id).catch(()=>{
+            return false;
+        });
+        try {
+
+            if(user == false) {
+                return {successful: false, message: 'User with ID ' + id + ' was not found'};
+            }
+            await Users.delete({id});
+        } catch (err) {
+            console.error(err);
+            return {successful: false, message: 'An error has occurred'};
+        }
+        console.log("User: " + user);
+        return {successful: true, message: 'User with ID ' + id + " was successfully deleted"};
     }
 };
