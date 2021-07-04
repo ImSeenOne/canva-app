@@ -7,7 +7,7 @@ export class Canvas extends BaseEntity{
     id!: string
 
     @PrimaryColumn()
-    user_id!: string
+    user_id!: number
 
     @Column()
     pjson!: string

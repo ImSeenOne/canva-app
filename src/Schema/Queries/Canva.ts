@@ -4,14 +4,16 @@ import { JsonType } from "../TypeDefs/Response"
 import { Canvas } from "../../Entities/Canvas";
 import fs from 'fs';
 import GraphQLJSON from "graphql-type-json";
+import { Users } from "../../Entities/Users";
 
 export const getAllCanvaByUser = {
     type: new GraphQLList(CanvaType),
     args: {
-        user_id: { type: GraphQLString },
+        username: { type: GraphQLString },
     },
-    resolve(parent: any, args: any) {
-        const user_id = args.user_id;
+    async resolve(parent: any, args: any) {
+        const user = await Users.findOne({username:args.username})
+        const user_id = user?.id;
         return Canvas.find({ user_id: user_id });
     },
 };
@@ -20,11 +22,12 @@ export const getSelectedCanva = {
     type: JsonType,
     args: {
         id: { type: GraphQLString },
-        user_id: { type: GraphQLString },
+        username: { type: GraphQLString },
     },
     async resolve(parent: any, args: any) {
-        const { id, user_id } = args;
-        const canva = await Canvas.findOne({ id: id, user_id: user_id });
+        const { id, username } = args;
+        const user = await Users.findOne({username: username})
+        const canva = await Canvas.findOne({ id: id, user_id: user?.id });
         const jsonFile = fs.readFileSync(`./src/JSONFiles/${canva?.pjson}`, {encoding:'utf-8'})
         
         return {object : canva, jsonData : jsonFile}
