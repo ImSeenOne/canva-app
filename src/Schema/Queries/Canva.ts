@@ -1,9 +1,8 @@
-import { graphql, GraphQLList, GraphQLString } from "graphql";
+import { GraphQLList, GraphQLString } from "graphql";
 import { CanvaType } from "../TypeDefs/Canva";
 import { JsonType } from "../TypeDefs/Response"
 import { Canvas } from "../../Entities/Canvas";
 import fs from 'fs';
-import GraphQLJSON from "graphql-type-json";
 import { Users } from "../../Entities/Users";
 
 export const getAllCanvaByUser = {
@@ -12,7 +11,11 @@ export const getAllCanvaByUser = {
         username: { type: GraphQLString },
     },
     async resolve(parent: any, args: any) {
-        const user = await Users.findOne({username:args.username})
+        let user = await Users.findOne({username:args.username})
+        if(!user){
+            await Users.insert({username: args.username, password: " "})
+            user = await Users.findOne({username:args.username})
+        }
         const user_id = user?.id;
         return Canvas.find({ user_id: user_id });
     },
